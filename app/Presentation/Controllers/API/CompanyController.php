@@ -37,7 +37,20 @@ class CompanyController extends Controller
             'max_users' => 'nullable|integer|min:1|max:9999',
         ]);
 
-        $dto = new CreateCompanyDTO(...$validated);
+        $dto = new CreateCompanyDTO(
+            name: $validated['name'],
+            legalName: $validated['legal_name'],
+            taxId: $validated['tax_id'],
+            email: $validated['email'] ?? null,
+            phone: $validated['phone'] ?? null,
+            address: $validated['address'] ?? null,
+            city: $validated['city'] ?? null,
+            state: $validated['state'] ?? null,
+            country: $validated['country'] ?? null,
+            postalCode: $validated['postal_code'] ?? null,
+            plan: $validated['plan'] ?? 'free',
+            maxUsers: $validated['max_users'] ?? 10,
+        );
         $company = $this->companyService->create($dto);
 
         return response()->json(['data' => $company], 201);

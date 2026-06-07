@@ -13,13 +13,11 @@ class RoleService
         private AuditService $auditService,
     ) {}
 
-    public function createRole(string $name, int $companyId, ?string $description = null): Role
+    public function createRole(string $name, int $companyId): Role
     {
         $role = Role::create([
             'name' => $name,
             'guard_name' => 'api',
-            'company_id' => $companyId,
-            'description' => $description,
         ]);
 
         $this->auditService->log(
@@ -99,17 +97,23 @@ class RoleService
 
     public function getAllRoles(int $companyId): array
     {
-        return Role::where('company_id', $companyId)->get()->toArray();
+        return Role::all()->toArray();
     }
 
     public function getAllPermissions(int $companyId): array
     {
-        return Permission::where('company_id', $companyId)->get()->toArray();
+        return Permission::all()->toArray();
     }
 
     public function getRolePermissions(int $roleId): array
     {
         $role = Role::findById($roleId);
         return $role->permissions->toArray();
+    }
+
+    public function deleteRole(int $id): void
+    {
+        $role = Role::findById($id);
+        $role->delete();
     }
 }

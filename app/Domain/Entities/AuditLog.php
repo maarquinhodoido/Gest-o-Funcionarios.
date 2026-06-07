@@ -3,8 +3,9 @@
 namespace App\Domain\Entities;
 
 use DateTimeImmutable;
+use JsonSerializable;
 
-class AuditLog
+class AuditLog implements JsonSerializable
 {
     private ?int $id;
     private int $companyId;
@@ -19,6 +20,7 @@ class AuditLog
     private ?string $location;
     private string $severity;
     private ?string $description;
+    private ?string $userName;
     private DateTimeImmutable $createdAt;
 
     public const ACTION_LOGIN = 'login';
@@ -54,6 +56,7 @@ class AuditLog
         ?string $location = null,
         string $severity = self::SEVERITY_INFO,
         ?string $description = null,
+        ?string $userName = null,
         ?DateTimeImmutable $createdAt = null
     ) {
         $this->id = $id;
@@ -69,6 +72,7 @@ class AuditLog
         $this->location = $location;
         $this->severity = $severity;
         $this->description = $description;
+        $this->userName = $userName;
         $this->createdAt = $createdAt ?? new DateTimeImmutable();
     }
 
@@ -85,7 +89,29 @@ class AuditLog
     public function getLocation(): ?string { return $this->location; }
     public function getSeverity(): string { return $this->severity; }
     public function getDescription(): ?string { return $this->description; }
+    public function getUserName(): ?string { return $this->userName; }
     public function getCreatedAt(): DateTimeImmutable { return $this->createdAt; }
 
     public function isCritical(): bool { return $this->severity === self::SEVERITY_CRITICAL; }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'company_id' => $this->companyId,
+            'user_id' => $this->userId,
+            'action' => $this->action,
+            'entity_type' => $this->entityType,
+            'entity_id' => $this->entityId,
+            'old_values' => $this->oldValues,
+            'new_values' => $this->newValues,
+            'ip_address' => $this->ipAddress,
+            'user_agent' => $this->userAgent,
+            'location' => $this->location,
+            'severity' => $this->severity,
+            'description' => $this->description,
+            'user_name' => $this->userName,
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+        ];
+    }
 }

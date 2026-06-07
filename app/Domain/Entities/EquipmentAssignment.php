@@ -3,10 +3,12 @@
 namespace App\Domain\Entities;
 
 use DateTimeImmutable;
+use JsonSerializable;
 
-class EquipmentAssignment
+class EquipmentAssignment implements JsonSerializable
 {
     private ?int $id;
+    private ?string $reference;
     private int $equipmentId;
     private int $userId;
     private int $assignedBy;
@@ -27,6 +29,7 @@ class EquipmentAssignment
 
     public function __construct(
         ?int $id = null,
+        ?string $reference = null,
         int $equipmentId,
         int $userId,
         int $assignedBy,
@@ -42,6 +45,7 @@ class EquipmentAssignment
         ?DateTimeImmutable $updatedAt = null
     ) {
         $this->id = $id;
+        $this->reference = $reference;
         $this->equipmentId = $equipmentId;
         $this->userId = $userId;
         $this->assignedBy = $assignedBy;
@@ -58,6 +62,7 @@ class EquipmentAssignment
     }
 
     public function getId(): ?int { return $this->id; }
+    public function getReference(): ?string { return $this->reference; }
     public function getEquipmentId(): int { return $this->equipmentId; }
     public function getUserId(): int { return $this->userId; }
     public function getAssignedBy(): int { return $this->assignedBy; }
@@ -94,5 +99,26 @@ class EquipmentAssignment
     public function addResponsibilityTerm(string $term): void
     {
         $this->responsibilityTerm = $term;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'reference' => $this->reference,
+            'equipment_id' => $this->equipmentId,
+            'user_id' => $this->userId,
+            'assigned_by' => $this->assignedBy,
+            'assigned_at' => $this->assignedAt?->format('Y-m-d H:i:s'),
+            'returned_at' => $this->returnedAt?->format('Y-m-d H:i:s'),
+            'returned_by' => $this->returnedBy,
+            'status' => $this->status,
+            'notes' => $this->notes,
+            'digital_signature' => $this->digitalSignature,
+            'responsibility_term' => $this->responsibilityTerm,
+            'expected_return_at' => $this->expectedReturnAt?->format('Y-m-d H:i:s'),
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
+        ];
     }
 }

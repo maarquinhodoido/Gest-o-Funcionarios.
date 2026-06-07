@@ -96,6 +96,7 @@ class EloquentEquipmentRepository implements EquipmentRepositoryInterface
     {
         return new Equipment(
             id: $model->id,
+            reference: $model->reference,
             companyId: $model->company_id,
             equipmentTypeId: $model->equipment_type_id,
             serialNumber: $model->serial_number,
@@ -124,6 +125,7 @@ class EloquentEquipmentRepository implements EquipmentRepositoryInterface
     private function toArray(Equipment $equipment): array
     {
         return [
+            'reference' => $equipment->getReference(),
             'company_id' => $equipment->getCompanyId(),
             'equipment_type_id' => $equipment->getEquipmentTypeId(),
             'serial_number' => $equipment->getSerialNumber(),

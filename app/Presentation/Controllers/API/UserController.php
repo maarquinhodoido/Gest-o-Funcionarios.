@@ -21,6 +21,14 @@ class UserController extends Controller
         $filters = $request->only(['status', 'department_id', 'search', 'per_page']);
         $result = $this->userService->findAll($companyId, $filters);
 
+        $items = array_map(function ($user) {
+            $data = $user->jsonSerialize();
+            $model = \App\Infrastructure\Models\UserModel::find($user->getId());
+            $data['roles'] = $model ? $model->getRoleNames()->toArray() : [];
+            return $data;
+        }, $result['items']);
+
+        $result['items'] = $items;
         return response()->json($result);
     }
 
@@ -29,7 +37,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
+            'password' => 'required|string|min:6',
             'phone' => 'nullable|string|max:20',
             'employee_profile_id' => 'nullable|integer|exists:employee_profiles,id',
             'department_id' => 'nullable|integer|exists:departments,id',
@@ -40,6 +48,7 @@ class UserController extends Controller
         ]);
 
         $dto = new CreateUserDTO(
+            reference: null,
             name: $validated['name'],
             email: $validated['email'],
             password: $validated['password'],
@@ -54,7 +63,7 @@ class UserController extends Controller
 
         $user = $this->userService->create($dto);
 
-        return response()->json(['data' => $user], 201);
+        return response()->json(['data' => $this->userWithRoles($user)], 201);
     }
 
     public function show(int $id): JsonResponse
@@ -63,7 +72,7 @@ class UserController extends Controller
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
-        return response()->json(['data' => $user]);
+        return response()->json(['data' => $this->userWithRoles($user)]);
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -71,21 +80,31 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|max:255|unique:users,email,' . $id,
-            'nif' => 'nullable|string|max:20',
-            'birth_date' => 'nullable|date',
             'phone' => 'nullable|string|max:20',
-            'niss' => 'nullable|string|max:20',
+            'employee_profile_id' => 'nullable|integer|exists:employee_profiles,id',
             'department_id' => 'nullable|integer|exists:departments,id',
             'position_id' => 'nullable|integer',
-            'position' => 'nullable|string|max:100',
             'hire_date' => 'nullable|date',
             'status' => 'nullable|string|in:active,blocked,inactive',
+            'roles' => 'nullable|array',
+            'roles.*' => 'string|exists:roles,name',
         ]);
 
-        $dto = new UpdateUserDTO(id: $id, ...$validated);
+        $dto = new UpdateUserDTO(
+            id: $id,
+            name: $validated['name'] ?? null,
+            email: $validated['email'] ?? null,
+            phone: $validated['phone'] ?? null,
+            employeeProfileId: $validated['employee_profile_id'] ?? null,
+            departmentId: $validated['department_id'] ?? null,
+            positionId: $validated['position_id'] ?? null,
+            hireDate: $validated['hire_date'] ?? null,
+            status: $validated['status'] ?? null,
+            roles: $validated['roles'] ?? [],
+        );
         $user = $this->userService->update($dto);
 
-        return response()->json(['data' => $user]);
+        return response()->json(['data' => $this->userWithRoles($user)]);
     }
 
     public function destroy(int $id): JsonResponse
@@ -109,7 +128,7 @@ class UserController extends Controller
     public function resetPassword(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
-            'password' => 'required|string|min:8|regex:/[A-Z]/|regex:/[a-z]/|regex:/[0-9]/|regex:/[@$!%*#?&]/',
+            'password' => 'required|string|min:6',
         ]);
 
         $user = $this->userService->resetPassword($id, $validated['password']);
@@ -122,5 +141,13 @@ class UserController extends Controller
         $companyId = $request->get('company_id', auth('api')->user()->company_id);
         $users = $this->userService->search($request->q, $companyId);
         return response()->json(['data' => $users]);
+    }
+
+    private function userWithRoles(\App\Domain\Entities\User $user): array
+    {
+        $data = $user->jsonSerialize();
+        $model = \App\Infrastructure\Models\UserModel::find($user->getId());
+        $data['roles'] = $model ? $model->getRoleNames()->toArray() : [];
+        return $data;
     }
 }

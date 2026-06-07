@@ -5,10 +5,12 @@ namespace App\Domain\Entities;
 use App\Domain\ValueObjects\Email;
 use App\Domain\ValueObjects\Phone;
 use DateTimeImmutable;
+use JsonSerializable;
 
-class User
+class User implements JsonSerializable
 {
     private ?int $id;
+    private ?string $reference;
     private string $name;
     private Email $email;
     private ?Phone $phone;
@@ -33,6 +35,7 @@ class User
 
     public function __construct(
         ?int $id = null,
+        ?string $reference = null,
         string $name,
         Email $email,
         string $password,
@@ -56,6 +59,7 @@ class User
         ?DateTimeImmutable $updatedAt = null
     ) {
         $this->id = $id;
+        $this->reference = $reference;
         $this->name = $name;
         $this->email = $email;
         $this->password = $password;
@@ -80,6 +84,7 @@ class User
     }
 
     public function getId(): ?int { return $this->id; }
+    public function getReference(): ?string { return $this->reference; }
     public function getName(): string { return $this->name; }
     public function getEmail(): Email { return $this->email; }
     public function getPhone(): ?Phone { return $this->phone; }
@@ -137,8 +142,43 @@ class User
         $this->passwordChangedAt = new DateTimeImmutable();
     }
 
+    public function setName(string $name): void { $this->name = $name; }
+    public function setEmail(Email $email): void { $this->email = $email; }
+    public function setPhone(?Phone $phone): void { $this->phone = $phone; }
+    public function setEmployeeProfileId(?int $employeeProfileId): void { $this->employeeProfileId = $employeeProfileId; }
+    public function setDepartmentId(?int $departmentId): void { $this->departmentId = $departmentId; }
+    public function setPositionId(?int $positionId): void { $this->positionId = $positionId; }
+    public function setHireDate(?DateTimeImmutable $hireDate): void { $this->hireDate = $hireDate; }
+    public function setStatus(string $status): void { $this->status = $status; }
+
     public function verifyEmail(): void
     {
         $this->emailVerifiedAt = new DateTimeImmutable();
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'reference' => $this->reference,
+            'name' => $this->name,
+            'email' => $this->email?->value(),
+            'phone' => $this->phone?->value(),
+            'company_id' => $this->companyId,
+            'employee_profile_id' => $this->employeeProfileId,
+            'department_id' => $this->departmentId,
+            'position_id' => $this->positionId,
+            'hire_date' => $this->hireDate?->format('Y-m-d'),
+            'status' => $this->status,
+            'is_online' => $this->isOnline,
+            'profile_photo' => $this->profilePhoto,
+            'two_factor_enabled' => $this->twoFactorEnabled,
+            'email_verified_at' => $this->emailVerifiedAt?->format('Y-m-d H:i:s'),
+            'last_login_at' => $this->lastLoginAt?->format('Y-m-d H:i:s'),
+            'last_login_ip' => $this->lastLoginIp,
+            'password_changed_at' => $this->passwordChangedAt?->format('Y-m-d H:i:s'),
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
+        ];
     }
 }

@@ -12,6 +12,7 @@ class EquipmentAssignmentModel extends Model
     protected $table = 'equipment_assignments';
 
     protected $fillable = [
+        'reference',
         'equipment_id',
         'user_id',
         'assigned_by',

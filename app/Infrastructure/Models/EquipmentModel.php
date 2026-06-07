@@ -12,6 +12,7 @@ class EquipmentModel extends Model
     protected $table = 'equipment';
 
     protected $fillable = [
+        'reference',
         'company_id',
         'equipment_type_id',
         'serial_number',

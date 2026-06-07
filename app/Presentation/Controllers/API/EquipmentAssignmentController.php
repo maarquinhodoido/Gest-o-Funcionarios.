@@ -79,4 +79,10 @@ class EquipmentAssignmentController extends Controller
         $history = $this->assignmentService->findHistoryByEquipment($equipmentId);
         return response()->json(['data' => $history]);
     }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $this->assignmentService->delete($id);
+        return response()->json(['message' => 'Assignment deleted']);
+    }
 }

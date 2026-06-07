@@ -17,9 +17,15 @@ class NotificationController extends Controller
     {
         $userId = auth('api')->id();
         $filters = $request->only(['is_read', 'type', 'per_page']);
-        $notifications = $this->notificationService->findByUser($userId, $filters);
 
-        return response()->json($notifications);
+        $userNotifs = $this->notificationService->findByUser($userId, ['per_page' => 999]);
+        $companyNotifs = $this->notificationService->findByCompany(auth('api')->user()->company_id, ['per_page' => 999, 'user_id_null' => true]);
+
+        $all = array_merge($userNotifs['items'] ?? [], $companyNotifs['items'] ?? []);
+        usort($all, fn($a, $b) => $b->getCreatedAt()->getTimestamp() - $a->getCreatedAt()->getTimestamp());
+        $all = array_slice($all, 0, $filters['per_page'] ?? 20);
+
+        return response()->json(['data' => $all]);
     }
 
     public function unreadCount(): JsonResponse

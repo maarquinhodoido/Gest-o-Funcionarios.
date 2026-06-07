@@ -35,12 +35,15 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('departments', DepartmentController::class);
 
+        Route::get('equipment-types', [\App\Presentation\Controllers\API\EquipmentTypeController::class, 'index']);
+
         Route::get('employee-profiles/search', [EmployeeProfileController::class, 'search']);
         Route::apiResource('employee-profiles', EmployeeProfileController::class);
 
         Route::get('equipment/stats', [EquipmentController::class, 'stats']);
         Route::get('equipment/available', [EquipmentController::class, 'available']);
         Route::post('equipment/{id}/maintenance', [EquipmentController::class, 'markMaintenance']);
+        Route::post('equipment/{id}/available', [EquipmentController::class, 'markAvailable']);
         Route::post('equipment/{id}/lost', [EquipmentController::class, 'markLost']);
         Route::apiResource('equipment', EquipmentController::class);
 

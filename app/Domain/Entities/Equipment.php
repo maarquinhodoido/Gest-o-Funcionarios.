@@ -3,10 +3,12 @@
 namespace App\Domain\Entities;
 
 use DateTimeImmutable;
+use JsonSerializable;
 
-class Equipment
+class Equipment implements JsonSerializable
 {
     private ?int $id;
+    private ?string $reference;
     private int $companyId;
     private int $equipmentTypeId;
     private string $serialNumber;
@@ -31,6 +33,7 @@ class Equipment
 
     public function __construct(
         ?int $id = null,
+        ?string $reference = null,
         int $companyId,
         int $equipmentTypeId,
         string $serialNumber,
@@ -48,6 +51,7 @@ class Equipment
         ?DateTimeImmutable $updatedAt = null
     ) {
         $this->id = $id;
+        $this->reference = $reference;
         $this->companyId = $companyId;
         $this->equipmentTypeId = $equipmentTypeId;
         $this->serialNumber = $serialNumber;
@@ -66,6 +70,7 @@ class Equipment
     }
 
     public function getId(): ?int { return $this->id; }
+    public function getReference(): ?string { return $this->reference; }
     public function getCompanyId(): int { return $this->companyId; }
     public function getEquipmentTypeId(): int { return $this->equipmentTypeId; }
     public function getSerialNumber(): string { return $this->serialNumber; }
@@ -90,4 +95,27 @@ class Equipment
     public function markMaintenance(): void { $this->status = self::STATUS_MAINTENANCE; }
     public function markLost(): void { $this->status = self::STATUS_LOST; }
     public function disable(): void { $this->status = self::STATUS_DISABLED; }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'reference' => $this->reference,
+            'company_id' => $this->companyId,
+            'equipment_type_id' => $this->equipmentTypeId,
+            'serial_number' => $this->serialNumber,
+            'brand' => $this->brand,
+            'model' => $this->model,
+            'status' => $this->status,
+            'location' => $this->location,
+            'warranty_end' => $this->warrantyEnd?->format('Y-m-d'),
+            'purchase_date' => $this->purchaseDate?->format('Y-m-d'),
+            'purchase_price' => $this->purchasePrice,
+            'supplier' => $this->supplier,
+            'notes' => $this->notes,
+            'qr_code' => $this->qrCode,
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
+        ];
+    }
 }

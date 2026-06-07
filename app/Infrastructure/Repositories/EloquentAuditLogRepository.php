@@ -71,9 +71,10 @@ class EloquentAuditLogRepository implements AuditLogRepositoryInterface
 
     public function findFailedLogins(int $companyId, int $minutes = 30): array
     {
+        $since = Carbon::now()->subMinutes($minutes);
         return AuditLogModel::where('company_id', $companyId)
             ->where('action', AuditLog::ACTION_LOGIN_FAILED)
-            ->where('created_at', '>=', Carbon::now()->subMinutes($minutes))
+            ->where('created_at', '>=', $since->toDateTimeString())
             ->get()
             ->map(fn($m) => $this->toDomain($m))
             ->toArray();
@@ -81,9 +82,10 @@ class EloquentAuditLogRepository implements AuditLogRepositoryInterface
 
     public function findSuspiciousActivities(int $companyId): array
     {
+        $since = Carbon::now()->subDays(7);
         return AuditLogModel::where('company_id', $companyId)
             ->where('severity', AuditLog::SEVERITY_CRITICAL)
-            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->where('created_at', '>=', $since->toDateTimeString())
             ->get()
             ->map(fn($m) => $this->toDomain($m))
             ->toArray();
@@ -112,6 +114,7 @@ class EloquentAuditLogRepository implements AuditLogRepositoryInterface
             location: $model->location,
             severity: $model->severity,
             description: $model->description,
+            userName: $model->relationLoaded('user') && $model->user ? $model->user->name : null,
             createdAt: new \DateTimeImmutable($model->created_at),
         );
     }

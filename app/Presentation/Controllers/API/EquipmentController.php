@@ -40,7 +40,16 @@ class EquipmentController extends Controller
 
         $dto = new CreateEquipmentDTO(
             companyId: $request->get('company_id', auth('api')->user()->company_id),
-            ...$validated,
+            equipmentTypeId: $validated['equipment_type_id'],
+            serialNumber: $validated['serial_number'],
+            brand: $validated['brand'],
+            model: $validated['model'],
+            location: $validated['location'] ?? null,
+            warrantyEnd: $validated['warranty_end'] ?? null,
+            purchaseDate: $validated['purchase_date'] ?? null,
+            purchasePrice: $validated['purchase_price'] ?? null,
+            supplier: $validated['supplier'] ?? null,
+            notes: $validated['notes'] ?? null,
         );
 
         $equipment = $this->equipmentService->create($dto);
@@ -78,6 +87,12 @@ class EquipmentController extends Controller
     public function markMaintenance(int $id): JsonResponse
     {
         $equipment = $this->equipmentService->markMaintenance($id);
+        return response()->json(['data' => $equipment]);
+    }
+
+    public function markAvailable(int $id): JsonResponse
+    {
+        $equipment = $this->equipmentService->markAvailable($id);
         return response()->json(['data' => $equipment]);
     }
 

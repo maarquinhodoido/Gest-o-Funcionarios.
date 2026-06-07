@@ -20,6 +20,7 @@ class NotificationService
         ?array $data = null,
     ): Notification {
         $notification = new Notification(
+            id: null,
             companyId: $companyId,
             userId: $userId,
             type: $type,

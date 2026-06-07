@@ -51,23 +51,27 @@ class EloquentUserRepository implements UserRepositoryInterface
         ];
     }
 
-    public function save(User $user): User
+    public function save(User $user, array $roles = []): User
     {
         $model = $this->toModel($user);
         $model->save();
 
-        if (!$user->getId()) {
-            $model->syncRoles([]);
+        if (!empty($roles)) {
+            $model->syncRoles($roles);
         }
 
         return $this->toDomain($model);
     }
 
-    public function update(User $user): User
+    public function update(User $user, array $roles = []): User
     {
         $model = UserModel::findOrFail($user->getId());
         $model->fill($this->toArray($user));
         $model->save();
+
+        if (!empty($roles)) {
+            $model->syncRoles($roles);
+        }
 
         return $this->toDomain($model);
     }
@@ -116,6 +120,7 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         return new User(
             id: $model->id,
+            reference: $model->reference,
             name: $model->name,
             email: new Email($model->email),
             password: $model->password,
@@ -150,6 +155,7 @@ class EloquentUserRepository implements UserRepositoryInterface
     private function toArray(User $user): array
     {
         return [
+            'reference' => $user->getReference(),
             'name' => $user->getName(),
             'email' => $user->getEmail()->value(),
             'password' => $user->getPassword(),

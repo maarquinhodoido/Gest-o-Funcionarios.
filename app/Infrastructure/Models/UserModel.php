@@ -15,6 +15,7 @@ class UserModel extends Authenticatable implements JWTSubject
     protected $table = 'users';
 
     protected $fillable = [
+        'reference',
         'name',
         'email',
         'password',

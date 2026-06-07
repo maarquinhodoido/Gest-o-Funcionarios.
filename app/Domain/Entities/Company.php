@@ -4,10 +4,12 @@ namespace App\Domain\Entities;
 
 use App\Domain\ValueObjects\Email;
 use DateTimeImmutable;
+use JsonSerializable;
 
-class Company
+class Company implements JsonSerializable
 {
     private ?int $id;
+    private ?string $reference;
     private string $name;
     private string $legalName;
     private string $taxId;
@@ -31,6 +33,7 @@ class Company
 
     public function __construct(
         ?int $id = null,
+        ?string $reference = null,
         string $name,
         string $legalName,
         string $taxId,
@@ -53,6 +56,7 @@ class Company
         ?DateTimeImmutable $updatedAt = null
     ) {
         $this->id = $id;
+        $this->reference = $reference;
         $this->name = $name;
         $this->legalName = $legalName;
         $this->taxId = $taxId;
@@ -76,6 +80,7 @@ class Company
     }
 
     public function getId(): ?int { return $this->id; }
+    public function getReference(): ?string { return $this->reference; }
     public function getName(): string { return $this->name; }
     public function getLegalName(): string { return $this->legalName; }
     public function getTaxId(): string { return $this->taxId; }
@@ -106,4 +111,32 @@ class Company
 
     public function changePlan(string $plan): void { $this->plan = $plan; }
     public function setMaxUsers(int $max): void { $this->maxUsers = $max; }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'reference' => $this->reference,
+            'name' => $this->name,
+            'legal_name' => $this->legalName,
+            'tax_id' => $this->taxId,
+            'email' => $this->email?->value(),
+            'phone' => $this->phone,
+            'address' => $this->address,
+            'city' => $this->city,
+            'state' => $this->state,
+            'country' => $this->country,
+            'postal_code' => $this->postalCode,
+            'plan' => $this->plan,
+            'status' => $this->status,
+            'max_users' => $this->maxUsers,
+            'logo' => $this->logo,
+            'primary_color' => $this->primaryColor,
+            'trial_ends_at' => $this->trialEndsAt?->format('Y-m-d H:i:s'),
+            'subscribed_at' => $this->subscribedAt?->format('Y-m-d H:i:s'),
+            'subscription_ends_at' => $this->subscriptionEndsAt?->format('Y-m-d H:i:s'),
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
+        ];
+    }
 }

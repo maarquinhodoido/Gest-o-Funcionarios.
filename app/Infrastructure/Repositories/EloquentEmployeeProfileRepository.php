@@ -83,12 +83,17 @@ class EloquentEmployeeProfileRepository implements EmployeeProfileRepositoryInte
     {
         return new EmployeeProfile(
             id: $model->id,
+            reference: $model->reference,
             companyId: $model->company_id,
             name: $model->name,
             nif: $model->nif,
             birthDate: $model->birth_date ? new DateTimeImmutable($model->birth_date) : null,
             phone: $model->phone,
             niss: $model->niss,
+            documentType: $model->document_type,
+            documentNumber: $model->document_number,
+            documentIssueDate: $model->document_issue_date ? new DateTimeImmutable($model->document_issue_date) : null,
+            documentExpiryDate: $model->document_expiry_date ? new DateTimeImmutable($model->document_expiry_date) : null,
             position: $model->position,
             status: $model->status,
             createdAt: new DateTimeImmutable($model->created_at),
@@ -99,12 +104,17 @@ class EloquentEmployeeProfileRepository implements EmployeeProfileRepositoryInte
     private function toArray(EmployeeProfile $profile): array
     {
         return [
+            'reference' => $profile->getReference(),
             'company_id' => $profile->getCompanyId(),
             'name' => $profile->getName(),
             'nif' => $profile->getNif(),
             'birth_date' => $profile->getBirthDate()?->format('Y-m-d'),
             'phone' => $profile->getPhone(),
             'niss' => $profile->getNiss(),
+            'document_type' => $profile->getDocumentType(),
+            'document_number' => $profile->getDocumentNumber(),
+            'document_issue_date' => $profile->getDocumentIssueDate()?->format('Y-m-d'),
+            'document_expiry_date' => $profile->getDocumentExpiryDate()?->format('Y-m-d'),
             'position' => $profile->getPosition(),
             'status' => $profile->getStatus(),
         ];

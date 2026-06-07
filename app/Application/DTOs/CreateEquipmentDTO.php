@@ -10,6 +10,7 @@ class CreateEquipmentDTO
         public readonly string $serialNumber,
         public readonly string $brand,
         public readonly string $model,
+        public readonly ?string $reference = null,
         public readonly ?string $location = null,
         public readonly ?string $warrantyEnd = null,
         public readonly ?string $purchaseDate = null,

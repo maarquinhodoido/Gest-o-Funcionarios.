@@ -3,8 +3,9 @@
 namespace App\Domain\Entities;
 
 use DateTimeImmutable;
+use JsonSerializable;
 
-class EquipmentType
+class EquipmentType implements JsonSerializable
 {
     private ?int $id;
     private int $companyId;
@@ -39,4 +40,17 @@ class EquipmentType
     public function isActive(): bool { return $this->isActive; }
     public function getCreatedAt(): DateTimeImmutable { return $this->createdAt; }
     public function getUpdatedAt(): DateTimeImmutable { return $this->updatedAt; }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'company_id' => $this->companyId,
+            'name' => $this->name,
+            'description' => $this->description,
+            'is_active' => $this->isActive,
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updatedAt->format('Y-m-d H:i:s'),
+        ];
+    }
 }

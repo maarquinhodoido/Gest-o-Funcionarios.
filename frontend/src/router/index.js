@@ -3,15 +3,15 @@ import { useAuthStore } from '../stores/auth'
 import Dashboard from '../views/Dashboard.vue'
 import Login from '../views/Login.vue'
 import Users from '../views/Users.vue'
-import UserForm from '../views/UserForm.vue'
 import Equipment from '../views/Equipment.vue'
-import EquipmentForm from '../views/EquipmentForm.vue'
 import Assignments from '../views/Assignments.vue'
 import Companies from '../views/Companies.vue'
 import Roles from '../views/Roles.vue'
 import Audit from '../views/Audit.vue'
 import Departments from '../views/Departments.vue'
 import Onboarding from '../views/Onboarding.vue'
+import EmployeeProfiles from '../views/EmployeeProfiles.vue'
+import Notifications from '../views/Notifications.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: Login, meta: { guest: true } },
@@ -40,9 +40,7 @@ const routes = [
   },
   {
     path: '/users/:id/edit',
-    name: 'UserEdit',
-    component: UserForm,
-    meta: { requiresAuth: true },
+    redirect: '/users',
   },
   {
     path: '/departments',
@@ -62,9 +60,7 @@ const routes = [
   },
   {
     path: '/equipment/:id/edit',
-    name: 'EquipmentEdit',
-    component: EquipmentForm,
-    meta: { requiresAuth: true },
+    redirect: '/equipment',
   },
   {
     path: '/assignments',
@@ -85,9 +81,21 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/employee-profiles',
+    name: 'EmployeeProfiles',
+    component: EmployeeProfiles,
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/onboarding',
     name: 'Onboarding',
     component: Onboarding,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: Notifications,
     meta: { requiresAuth: true },
   },
 ]

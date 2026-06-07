@@ -36,11 +36,13 @@ class EquipmentAssignmentService
         }
 
         $assignment = new EquipmentAssignment(
+            id: null,
             equipmentId: $dto->equipmentId,
             userId: $dto->userId,
             assignedBy: $dto->assignedBy,
             notes: $dto->notes,
             expectedReturnAt: $dto->expectedReturnAt ? new \DateTimeImmutable($dto->expectedReturnAt) : null,
+            reference: ReferenceGenerator::generate('equipment_assignment'),
         );
 
         if ($dto->responsibilityTerm) {
@@ -58,6 +60,13 @@ class EquipmentAssignmentService
             entityType: 'equipment_assignment',
             entityId: $saved->getId(),
             description: "Equipment {$equipment->getSerialNumber()} assigned to {$user->getName()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $equipment->getCompanyId(),
+            title: 'Equipamento Atribuído',
+            message: "Equipamento {$equipment->getSerialNumber()} foi atribuído a {$user->getName()}",
+            type: \App\Domain\Entities\Notification::TYPE_SUCCESS,
         );
 
         return $saved;
@@ -92,6 +101,13 @@ class EquipmentAssignmentService
             entityType: 'equipment_assignment',
             entityId: $assignmentId,
             description: "Equipment {$equipment?->getSerialNumber()} returned by {$user?->getName()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $equipment?->getCompanyId() ?? 0,
+            title: 'Equipamento Devolvido',
+            message: "Equipamento {$equipment?->getSerialNumber()} foi devolvido por {$user?->getName()}",
+            type: \App\Domain\Entities\Notification::TYPE_SUCCESS,
         );
 
         return $saved;
@@ -148,5 +164,37 @@ class EquipmentAssignmentService
     public function countActiveByCompany(int $companyId): int
     {
         return $this->assignmentRepository->countActiveByCompany($companyId);
+    }
+
+    public function findById(int $id): ?EquipmentAssignment
+    {
+        return $this->assignmentRepository->findById($id);
+    }
+
+    public function delete(int $id): void
+    {
+        $assignment = $this->assignmentRepository->findById($id);
+        if (!$assignment) {
+            throw new \DomainException('Assignment not found.');
+        }
+
+        $equipment = $this->equipmentRepository->findById($assignment->getEquipmentId());
+
+        $this->auditService->log(
+            companyId: $equipment?->getCompanyId() ?? 0,
+            action: AuditLog::ACTION_DELETE,
+            entityType: 'equipment_assignment',
+            entityId: $id,
+            description: "Assignment deleted: equipment #{$assignment->getEquipmentId()} / user #{$assignment->getUserId()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $equipment?->getCompanyId() ?? 0,
+            title: 'Atribuição Eliminada',
+            message: "Atribuição do equipamento #{$assignment->getEquipmentId()} foi eliminada",
+            type: \App\Domain\Entities\Notification::TYPE_WARNING,
+        );
+
+        $this->assignmentRepository->delete($id);
     }
 }

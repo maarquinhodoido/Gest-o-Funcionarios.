@@ -4,6 +4,7 @@ namespace App\Application\Services;
 
 use App\Application\DTOs\CreateUserDTO;
 use App\Application\DTOs\UpdateUserDTO;
+use App\Domain\Entities\AuditLog;
 use App\Domain\Entities\User;
 use App\Domain\Repositories\UserRepositoryInterface;
 use App\Domain\Repositories\CompanyRepositoryInterface;
@@ -33,26 +34,34 @@ class UserService
         }
 
         $user = new User(
+            id: null,
             name: $dto->name,
             email: new Email($dto->email),
             password: Hash::make($dto->password),
             companyId: $dto->companyId,
             phone: $dto->phone ? new Phone($dto->phone) : null,
-            employeeProfileId: $dto->employeeProfileId,
             departmentId: $dto->departmentId,
             positionId: $dto->positionId,
-            hireDate: $dto->hireDate ? new \DateTimeImmutable($dto->hireDate) : null,
+            hireDate: $dto->hireDate ? new \DateTimeImmutable($dto->hireDate) : new \DateTimeImmutable(),
+            reference: ReferenceGenerator::generate('user'),
         );
 
-        $saved = $this->userRepository->save($user);
+        $saved = $this->userRepository->save($user, $dto->roles);
 
         $this->auditService->log(
             companyId: $dto->companyId,
-            userId: $saved->getId(),
             action: AuditLog::ACTION_CREATE,
             entityType: 'user',
             entityId: $saved->getId(),
             description: "User created: {$saved->getName()} ({$saved->getEmail()})",
+        );
+
+        $this->notificationService->create(
+            companyId: $dto->companyId,
+            title: 'Novo Utilizador',
+            message: "O utilizador {$saved->getName()} foi criado",
+            type: \App\Domain\Entities\Notification::TYPE_SUCCESS,
+            userId: $saved->getId(),
         );
 
         return $saved;
@@ -79,14 +88,37 @@ class UserService
 
         if ($dto->name !== null) {
             $changes['name'] = ['old' => $user->getName(), 'new' => $dto->name];
+            $user->setName($dto->name);
+        }
+        if ($dto->email !== null) {
+            $changes['email'] = ['old' => $user->getEmail(), 'new' => $dto->email];
+            $user->setEmail(new Email($dto->email));
+        }
+        if ($dto->phone !== null) {
+            $changes['phone'] = ['old' => $user->getPhone(), 'new' => $dto->phone];
+            $user->setPhone($dto->phone ? new Phone($dto->phone) : null);
+        }
+        if ($dto->employeeProfileId !== null) {
+            $user->setEmployeeProfileId($dto->employeeProfileId);
+        }
+        if ($dto->departmentId !== null) {
+            $user->setDepartmentId($dto->departmentId);
+        }
+        if ($dto->positionId !== null) {
+            $user->setPositionId($dto->positionId);
+        }
+        if ($dto->hireDate !== null) {
+            $user->setHireDate(new \DateTimeImmutable($dto->hireDate));
+        }
+        if ($dto->status !== null) {
+            $user->setStatus($dto->status);
         }
 
-        $saved = $this->userRepository->update($user);
+        $saved = $this->userRepository->update($user, $dto->roles);
 
         if (!empty($changes)) {
             $this->auditService->log(
                 companyId: $saved->getCompanyId(),
-                userId: $saved->getId(),
                 action: AuditLog::ACTION_UPDATE,
                 entityType: 'user',
                 entityId: $saved->getId(),
@@ -110,7 +142,6 @@ class UserService
 
         $this->auditService->log(
             companyId: $saved->getCompanyId(),
-            userId: $saved->getId(),
             action: AuditLog::ACTION_BLOCK,
             entityType: 'user',
             entityId: $id,
@@ -133,7 +164,6 @@ class UserService
 
         $this->auditService->log(
             companyId: $saved->getCompanyId(),
-            userId: $saved->getId(),
             action: AuditLog::ACTION_UNBLOCK,
             entityType: 'user',
             entityId: $id,
@@ -155,7 +185,6 @@ class UserService
 
         $this->auditService->log(
             companyId: $saved->getCompanyId(),
-            userId: $saved->getId(),
             action: AuditLog::ACTION_UPDATE,
             entityType: 'user',
             entityId: $id,
@@ -177,7 +206,6 @@ class UserService
 
         $this->auditService->log(
             companyId: $saved->getCompanyId(),
-            userId: $saved->getId(),
             action: AuditLog::ACTION_PASSWORD_CHANGE,
             entityType: 'user',
             entityId: $id,
@@ -197,7 +225,6 @@ class UserService
 
         $this->auditService->log(
             companyId: $user->getCompanyId(),
-            userId: $id,
             action: AuditLog::ACTION_DELETE,
             entityType: 'user',
             entityId: $id,

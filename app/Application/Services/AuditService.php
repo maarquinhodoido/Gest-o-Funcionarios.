@@ -27,6 +27,10 @@ class AuditService
         $ip = $this->request?->ip() ?? '';
         $userAgent = $this->request?->userAgent();
 
+        if ($userId === null && ($user = auth('api')->user())) {
+            $userId = $user->id;
+        }
+
         $log = new AuditLog(
             id: null,
             companyId: $companyId,

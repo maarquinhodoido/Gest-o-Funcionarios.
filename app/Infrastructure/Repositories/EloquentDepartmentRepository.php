@@ -22,6 +22,11 @@ class EloquentDepartmentRepository implements DepartmentRepositoryInterface
             ->toArray();
     }
 
+    public function countByCompany(int $companyId): int
+    {
+        return DepartmentModel::where('company_id', $companyId)->count();
+    }
+
     public function save(Department $department): Department
     {
         $model = $this->toModel($department);
@@ -45,6 +50,7 @@ class EloquentDepartmentRepository implements DepartmentRepositoryInterface
     {
         return new Department(
             id: $model->id,
+            reference: $model->reference,
             companyId: $model->company_id,
             name: $model->name,
             description: $model->description,
@@ -65,6 +71,7 @@ class EloquentDepartmentRepository implements DepartmentRepositoryInterface
     private function toArray(Department $department): array
     {
         return [
+            'reference' => $department->getReference(),
             'company_id' => $department->getCompanyId(),
             'name' => $department->getName(),
             'description' => $department->getDescription(),

@@ -15,4 +15,5 @@ interface EquipmentAssignmentRepositoryInterface
     public function findHistoryByEquipment(int $equipmentId): array;
     public function findHistoryByUser(int $userId): array;
     public function countActiveByCompany(int $companyId): int;
+    public function delete(int $id): void;
 }

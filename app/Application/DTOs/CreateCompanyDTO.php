@@ -8,6 +8,7 @@ class CreateCompanyDTO
         public readonly string $name,
         public readonly string $legalName,
         public readonly string $taxId,
+        public readonly ?string $reference = null,
         public readonly ?string $email = null,
         public readonly ?string $phone = null,
         public readonly ?string $address = null,

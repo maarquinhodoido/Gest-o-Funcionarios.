@@ -1,38 +1,38 @@
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div :class="['rounded-xl border p-6', theme.isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
+  <div class="space-y-6 animate-fade-in">
+    <h1 class="text-xl font-bold tracking-tight" style="color: var(--ds-text-primary)">Onboarding / Offboarding</h1>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="card">
       <h3 :class="['text-lg font-semibold mb-6', theme.isDark ? 'text-white' : 'text-gray-900']">
         Onboarding - Novo Funcionário
       </h3>
       <form @submit.prevent="handleOnboard" class="space-y-4">
-        <input v-model="form.name" placeholder="Nome" required
-          :class="['w-full px-4 py-2 rounded-lg border outline-none', theme.isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300']" />
-        <input v-model="form.email" type="email" placeholder="Email" required
-          :class="['w-full px-4 py-2 rounded-lg border outline-none', theme.isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300']" />
-        <input v-model="form.password" type="password" placeholder="Password" required
-          :class="['w-full px-4 py-2 rounded-lg border outline-none', theme.isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300']" />
-        <button type="submit"
-          class="w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg">
-          Iniciar Onboarding
+        <div v-if="onboardError" class="p-3 rounded-lg text-sm bg-red-100 text-red-700 border border-red-300">{{ onboardError }}</div>
+        <input v-model="form.name" placeholder="Nome" required class="input" />
+        <input v-model="form.email" type="email" placeholder="Email" required class="input" />
+        <input v-model="form.password" type="password" placeholder="Password" required class="input" />
+        <button type="submit" :disabled="onboarding" class="btn btn-primary w-full btn-lg">
+          {{ onboarding ? 'A processar...' : 'Iniciar Onboarding' }}
         </button>
       </form>
     </div>
 
-    <div :class="['rounded-xl border p-6', theme.isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200']">
+      <div class="card">
       <h3 :class="['text-lg font-semibold mb-6', theme.isDark ? 'text-white' : 'text-gray-900']">
         Offboarding - Desligar Funcionário
       </h3>
       <div class="space-y-4">
-        <select v-model="offboardUserId"
-          :class="['w-full px-4 py-2 rounded-lg border outline-none', theme.isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300']">
+        <div v-if="offboardError" class="p-3 rounded-lg text-sm bg-red-100 text-red-700 border border-red-300">{{ offboardError }}</div>
+        <select v-model="offboardUserId" class="input">
           <option value="">Selecionar Utilizador</option>
           <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
         </select>
-        <button @click="handleOffboard" :disabled="!offboardUserId"
-          class="w-full px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg disabled:opacity-50">
-          Desligar Funcionário
+        <button @click="handleOffboard" :disabled="!offboardUserId || offboarding"
+          class="btn btn-danger w-full btn-lg">
+          {{ offboarding ? 'A processar...' : 'Desligar Funcionário' }}
         </button>
       </div>
+    </div>
     </div>
   </div>
 </template>
@@ -41,11 +41,17 @@
 import { ref, onMounted } from 'vue'
 import { useThemeStore } from '../stores/theme'
 import api from '../lib/axios'
+import { useToastStore } from '../stores/toast'
 
 const theme = useThemeStore()
 const users = ref([])
 const offboardUserId = ref('')
 const form = ref({ name: '', email: '', password: '' })
+const onboarding = ref(false)
+const offboarding = ref(false)
+const onboardError = ref('')
+const offboardError = ref('')
+const toast = useToastStore()
 
 onMounted(async () => {
   try {
@@ -55,19 +61,35 @@ onMounted(async () => {
 })
 
 async function handleOnboard() {
+  onboarding.value = true
+  onboardError.value = ''
   try {
     await api.post('/v1/onboarding/onboard', form.value)
     form.value = { name: '', email: '', password: '' }
-    alert('Onboarding realizado com sucesso!')
-  } catch (e) { console.error(e) }
+    toast.success('Onboarding realizado com sucesso!')
+  } catch (e) {
+    onboardError.value = e.response?.data?.message || e.response?.data?.error || 'Erro no onboarding. Verifique os dados e tente novamente.'
+    if (e.response?.data?.errors) {
+      const msgs = Object.values(e.response.data.errors).flat()
+      onboardError.value = msgs.join('\n')
+    }
+  } finally {
+    onboarding.value = false
+  }
 }
 
 async function handleOffboard() {
   if (!offboardUserId.value) return
+  offboarding.value = true
+  offboardError.value = ''
   try {
     await api.post(`/v1/onboarding/${offboardUserId.value}/offboard`)
     offboardUserId.value = ''
-    alert('Offboarding realizado com sucesso!')
-  } catch (e) { console.error(e) }
+    toast.success('Offboarding realizado com sucesso!')
+  } catch (e) {
+    offboardError.value = e.response?.data?.message || e.response?.data?.error || 'Erro no offboarding. Tente novamente.'
+  } finally {
+    offboarding.value = false
+  }
 }
 </script>

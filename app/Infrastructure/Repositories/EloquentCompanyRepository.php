@@ -63,6 +63,7 @@ class EloquentCompanyRepository implements CompanyRepositoryInterface
     {
         return new Company(
             id: $model->id,
+            reference: $model->reference,
             name: $model->name,
             legalName: $model->legal_name,
             taxId: $model->tax_id,
@@ -96,6 +97,7 @@ class EloquentCompanyRepository implements CompanyRepositoryInterface
     private function toArray(Company $company): array
     {
         return [
+            'reference' => $company->getReference(),
             'name' => $company->getName(),
             'legal_name' => $company->getLegalName(),
             'tax_id' => $company->getTaxId(),

@@ -3,43 +3,44 @@
     <Dialog as="div" @close="close" class="relative z-50">
       <TransitionChild
         as="template"
-        enter="duration-300 ease-out"
+        enter="duration-200 ease-out"
         enter-from="opacity-0"
         enter-to="opacity-100"
-        leave="duration-200 ease-in"
+        leave="duration-150 ease-in"
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" />
       </TransitionChild>
 
       <div class="fixed inset-0 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4">
           <TransitionChild
             as="template"
-            enter="duration-300 ease-out"
-            enter-from="opacity-0 scale-95"
-            enter-to="opacity-100 scale-100"
-            leave="duration-200 ease-in"
+            enter="duration-200 ease-out"
+            enter-from="opacity-0 scale-95 translate-y-2"
+            enter-to="opacity-100 scale-100 translate-y-0"
+            leave="duration-150 ease-in"
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
               :class="[
-                'w-full rounded-xl border shadow-xl overflow-hidden',
+                'w-full rounded-2xl shadow-xl border overflow-hidden transition-all',
                 maxWidthClass,
-                theme.isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                theme.isDark ? 'bg-gray-800 border-gray-700 shadow-2xl shadow-black/20' : 'bg-white border-gray-100 shadow-gray-200/50'
               ]"
+              style="box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15)"
             >
-              <div v-if="title" :class="['flex items-center justify-between px-6 py-4 border-b', theme.isDark ? 'border-gray-700' : 'border-gray-200']">
+              <div v-if="title" :class="['flex items-center justify-between px-6 py-4 border-b', theme.isDark ? 'border-gray-700' : 'border-gray-100']">
                 <DialogTitle :class="['text-lg font-semibold', theme.isDark ? 'text-white' : 'text-gray-900']">
                   {{ title }}
                 </DialogTitle>
-                <button @click="close" :class="['p-1 rounded-lg transition-colors', theme.isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500']">
+                <button @click="close" :class="['p-1.5 rounded-lg transition-colors duration-200', theme.isDark ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-200' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600']">
                   <XMarkIcon class="w-5 h-5" />
                 </button>
               </div>
-              <div class="p-6">
+              <div :class="title ? 'p-6' : 'p-6'">
                 <slot />
               </div>
             </DialogPanel>
@@ -63,7 +64,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-
 const theme = useThemeStore()
 
 const maxWidthClass = computed(() => ({

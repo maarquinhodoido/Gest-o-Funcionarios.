@@ -12,6 +12,7 @@ class CompanyModel extends Model
     protected $table = 'companies';
 
     protected $fillable = [
+        'reference',
         'name',
         'legal_name',
         'tax_id',

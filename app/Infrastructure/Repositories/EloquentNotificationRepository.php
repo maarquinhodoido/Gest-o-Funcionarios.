@@ -37,6 +37,15 @@ class EloquentNotificationRepository implements NotificationRepositoryInterface
     public function findByCompany(int $companyId, array $filters = []): array
     {
         $query = NotificationModel::where('company_id', $companyId);
+        if (!empty($filters['user_id_null'])) {
+            $query->whereNull('user_id');
+        }
+        if (!empty($filters['is_read'])) {
+            $query->where('is_read', $filters['is_read'] === 'true' || $filters['is_read'] === true);
+        }
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
         $perPage = $filters['per_page'] ?? 15;
         $models = $query->orderBy('created_at', 'desc')->paginate($perPage);
         return [

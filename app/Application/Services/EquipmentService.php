@@ -14,6 +14,7 @@ class EquipmentService
         private EquipmentRepositoryInterface $equipmentRepository,
         private EquipmentAssignmentRepositoryInterface $assignmentRepository,
         private AuditService $auditService,
+        private NotificationService $notificationService,
     ) {}
 
     public function create(CreateEquipmentDTO $dto): Equipment
@@ -24,6 +25,7 @@ class EquipmentService
         }
 
         $equipment = new Equipment(
+            id: null,
             companyId: $dto->companyId,
             equipmentTypeId: $dto->equipmentTypeId,
             serialNumber: $dto->serialNumber,
@@ -35,6 +37,7 @@ class EquipmentService
             purchasePrice: $dto->purchasePrice,
             supplier: $dto->supplier,
             notes: $dto->notes,
+            reference: ReferenceGenerator::generate('equipment'),
         );
 
         $saved = $this->equipmentRepository->save($equipment);
@@ -45,6 +48,13 @@ class EquipmentService
             entityType: 'equipment',
             entityId: $saved->getId(),
             description: "Equipment created: {$saved->getBrand()} {$saved->getModel()} ({$saved->getSerialNumber()})",
+        );
+
+        $this->notificationService->create(
+            companyId: $dto->companyId,
+            title: 'Novo Equipamento',
+            message: "Equipamento {$saved->getBrand()} {$saved->getModel()} foi criado",
+            type: \App\Domain\Entities\Notification::TYPE_SUCCESS,
         );
 
         return $saved;
@@ -67,7 +77,27 @@ class EquipmentService
             throw new \DomainException('Equipment not found.');
         }
 
-        $saved = $this->equipmentRepository->update($equipment);
+        $cloned = new Equipment(
+            id: $equipment->getId(),
+            reference: $equipment->getReference(),
+            companyId: $equipment->getCompanyId(),
+            equipmentTypeId: $equipment->getEquipmentTypeId(),
+            serialNumber: $equipment->getSerialNumber(),
+            brand: $equipment->getBrand(),
+            model: $equipment->getModel(),
+            status: $equipment->getStatus(),
+            location: $data['location'] ?? $equipment->getLocation(),
+            warrantyEnd: isset($data['warranty_end']) ? new \DateTimeImmutable($data['warranty_end']) : $equipment->getWarrantyEnd(),
+            purchaseDate: isset($data['purchase_date']) ? new \DateTimeImmutable($data['purchase_date']) : $equipment->getPurchaseDate(),
+            purchasePrice: isset($data['purchase_price']) ? (float) $data['purchase_price'] : $equipment->getPurchasePrice(),
+            supplier: $data['supplier'] ?? $equipment->getSupplier(),
+            notes: $data['notes'] ?? $equipment->getNotes(),
+            qrCode: $equipment->getQrCode(),
+            createdAt: $equipment->getCreatedAt(),
+            updatedAt: $equipment->getUpdatedAt(),
+        );
+
+        $saved = $this->equipmentRepository->update($cloned);
 
         $this->auditService->log(
             companyId: $saved->getCompanyId(),
@@ -76,6 +106,13 @@ class EquipmentService
             entityId: $id,
             newValues: $data,
             description: "Equipment updated: {$saved->getBrand()} {$saved->getModel()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $saved->getCompanyId(),
+            title: 'Equipamento Atualizado',
+            message: "Equipamento {$saved->getBrand()} {$saved->getModel()} foi atualizado",
+            type: \App\Domain\Entities\Notification::TYPE_INFO,
         );
 
         return $saved;
@@ -99,6 +136,41 @@ class EquipmentService
             description: "Equipment marked as maintenance: {$saved->getSerialNumber()}",
         );
 
+        $this->notificationService->create(
+            companyId: $saved->getCompanyId(),
+            title: 'Equipamento em Manutenção',
+            message: "Equipamento {$saved->getSerialNumber()} foi marcado como manutenção",
+            type: \App\Domain\Entities\Notification::TYPE_WARNING,
+        );
+
+        return $saved;
+    }
+
+    public function markAvailable(int $id): Equipment
+    {
+        $equipment = $this->equipmentRepository->findById($id);
+        if (!$equipment) {
+            throw new \DomainException('Equipment not found.');
+        }
+
+        $equipment->markAvailable();
+        $saved = $this->equipmentRepository->update($equipment);
+
+        $this->auditService->log(
+            companyId: $saved->getCompanyId(),
+            action: AuditLog::ACTION_UPDATE,
+            entityType: 'equipment',
+            entityId: $id,
+            description: "Equipment marked as available: {$saved->getSerialNumber()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $saved->getCompanyId(),
+            title: 'Equipamento Disponível',
+            message: "Equipamento {$saved->getSerialNumber()} está disponível",
+            type: \App\Domain\Entities\Notification::TYPE_SUCCESS,
+        );
+
         return $saved;
     }
 
@@ -119,6 +191,13 @@ class EquipmentService
             entityId: $id,
             severity: AuditLog::SEVERITY_CRITICAL,
             description: "Equipment marked as lost: {$saved->getSerialNumber()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $saved->getCompanyId(),
+            title: 'Equipamento Perdido',
+            message: "Equipamento {$saved->getSerialNumber()} foi marcado como perdido",
+            type: \App\Domain\Entities\Notification::TYPE_ALERT,
         );
 
         return $saved;
@@ -144,6 +223,13 @@ class EquipmentService
             entityType: 'equipment',
             entityId: $id,
             description: "Equipment deleted: {$equipment->getSerialNumber()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $equipment->getCompanyId(),
+            title: 'Equipamento Eliminado',
+            message: "Equipamento {$equipment->getSerialNumber()} foi eliminado",
+            type: \App\Domain\Entities\Notification::TYPE_WARNING,
         );
     }
 

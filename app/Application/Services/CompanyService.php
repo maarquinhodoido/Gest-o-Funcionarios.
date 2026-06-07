@@ -2,6 +2,7 @@
 
 namespace App\Application\Services;
 
+use App\Domain\Entities\AuditLog;
 use App\Application\DTOs\CreateCompanyDTO;
 use App\Domain\Entities\Company;
 use App\Domain\Repositories\CompanyRepositoryInterface;
@@ -12,6 +13,7 @@ class CompanyService
     public function __construct(
         private CompanyRepositoryInterface $companyRepository,
         private AuditService $auditService,
+        private NotificationService $notificationService,
     ) {}
 
     public function create(CreateCompanyDTO $dto): Company
@@ -22,6 +24,7 @@ class CompanyService
         }
 
         $company = new Company(
+            id: null,
             name: $dto->name,
             legalName: $dto->legalName,
             taxId: $dto->taxId,
@@ -34,6 +37,7 @@ class CompanyService
             postalCode: $dto->postalCode,
             plan: $dto->plan,
             maxUsers: $dto->maxUsers,
+            reference: ReferenceGenerator::generate('company'),
         );
 
         $saved = $this->companyRepository->save($company);
@@ -44,6 +48,13 @@ class CompanyService
             entityType: 'company',
             entityId: $saved->getId(),
             description: "Company created: {$saved->getName()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $saved->getId(),
+            title: 'Nova Empresa',
+            message: "Empresa {$saved->getName()} foi criada",
+            type: \App\Domain\Entities\Notification::TYPE_SUCCESS,
         );
 
         return $saved;
@@ -84,6 +95,13 @@ class CompanyService
             description: "Company updated: {$updated->getName()}",
         );
 
+        $this->notificationService->create(
+            companyId: $id,
+            title: 'Empresa Atualizada',
+            message: "Empresa {$updated->getName()} foi atualizada",
+            type: \App\Domain\Entities\Notification::TYPE_INFO,
+        );
+
         return $updated;
     }
 
@@ -102,6 +120,13 @@ class CompanyService
             entityType: 'company',
             entityId: $id,
             description: "Company deleted: {$company->getName()}",
+        );
+
+        $this->notificationService->create(
+            companyId: $id,
+            title: 'Empresa Eliminada',
+            message: "Empresa {$company->getName()} foi eliminada",
+            type: \App\Domain\Entities\Notification::TYPE_WARNING,
         );
     }
 

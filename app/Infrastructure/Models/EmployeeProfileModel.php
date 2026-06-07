@@ -12,18 +12,25 @@ class EmployeeProfileModel extends Model
     protected $table = 'employee_profiles';
 
     protected $fillable = [
+        'reference',
         'company_id',
         'name',
         'nif',
         'birth_date',
         'phone',
         'niss',
+        'document_type',
+        'document_number',
+        'document_issue_date',
+        'document_expiry_date',
         'position',
         'status',
     ];
 
     protected $casts = [
         'birth_date' => 'date',
+        'document_issue_date' => 'date',
+        'document_expiry_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -3,8 +3,9 @@
 namespace App\Domain\Entities;
 
 use DateTimeImmutable;
+use JsonSerializable;
 
-class Notification
+class Notification implements JsonSerializable
 {
     private ?int $id;
     private int $companyId;
@@ -23,12 +24,12 @@ class Notification
     public const TYPE_SUCCESS = 'success';
 
     public function __construct(
-        ?int $id = null,
         int $companyId,
-        ?int $userId = null,
-        string $type = self::TYPE_INFO,
         string $title,
         string $message,
+        ?int $id = null,
+        ?int $userId = null,
+        string $type = self::TYPE_INFO,
         ?array $data = null,
         bool $isRead = false,
         ?DateTimeImmutable $readAt = null,
@@ -61,5 +62,21 @@ class Notification
     {
         $this->isRead = true;
         $this->readAt = new DateTimeImmutable();
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'company_id' => $this->companyId,
+            'user_id' => $this->userId,
+            'type' => $this->type,
+            'title' => $this->title,
+            'message' => $this->message,
+            'data' => $this->data,
+            'is_read' => $this->isRead,
+            'read_at' => $this->readAt?->format('Y-m-d H:i:s'),
+            'created_at' => $this->createdAt->format('Y-m-d H:i:s'),
+        ];
     }
 }

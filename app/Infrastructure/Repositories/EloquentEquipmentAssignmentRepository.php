@@ -88,6 +88,11 @@ class EloquentEquipmentAssignmentRepository implements EquipmentAssignmentReposi
             ->toArray();
     }
 
+    public function delete(int $id): void
+    {
+        EquipmentAssignmentModel::findOrFail($id)->delete();
+    }
+
     public function countActiveByCompany(int $companyId): int
     {
         return EquipmentAssignmentModel::whereHas('equipment', function ($q) use ($companyId) {
@@ -99,6 +104,7 @@ class EloquentEquipmentAssignmentRepository implements EquipmentAssignmentReposi
     {
         return new EquipmentAssignment(
             id: $model->id,
+            reference: $model->reference,
             equipmentId: $model->equipment_id,
             userId: $model->user_id,
             assignedBy: $model->assigned_by,
@@ -125,6 +131,7 @@ class EloquentEquipmentAssignmentRepository implements EquipmentAssignmentReposi
     private function toArray(EquipmentAssignment $assignment): array
     {
         return [
+            'reference' => $assignment->getReference(),
             'equipment_id' => $assignment->getEquipmentId(),
             'user_id' => $assignment->getUserId(),
             'assigned_by' => $assignment->getAssignedBy(),

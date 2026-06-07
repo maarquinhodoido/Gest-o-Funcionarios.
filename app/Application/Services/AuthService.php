@@ -2,6 +2,7 @@
 
 namespace App\Application\Services;
 
+use App\Domain\Entities\AuditLog;
 use App\Domain\Repositories\UserRepositoryInterface;
 use App\Infrastructure\Models\UserModel;
 use Illuminate\Support\Facades\Hash;
@@ -42,9 +43,12 @@ class AuthService
         $model = UserModel::find($user->getId());
         $token = auth('api')->login($model);
 
+        $userData = $user->jsonSerialize();
+        $userData['roles'] = $model ? $model->getRoleNames()->toArray() : [];
+
         return [
             'token' => $token,
-            'user' => $user,
+            'user' => $userData,
             'requires_2fa' => $user->isTwoFactorEnabled(),
         ];
     }
